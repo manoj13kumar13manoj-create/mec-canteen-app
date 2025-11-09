@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import Navbar from "@/components/Navbar";
-import { Loader2, CheckCircle2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 type CartItem = {
@@ -30,7 +30,6 @@ export default function CheckoutPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   const [pickupLocation, setPickupLocation] = useState(PICKUP_LOCATIONS[0]);
-  const [orderPlaced, setOrderPlaced] = useState(false);
 
   useEffect(() => {
     if (!isPending && !session?.user) {
@@ -83,6 +82,8 @@ export default function CheckoutPage() {
       });
 
       if (response.ok) {
+        const newOrder = await response.json();
+        
         // Clear cart items
         await Promise.all(
           cartItems.map((item) =>
@@ -90,10 +91,8 @@ export default function CheckoutPage() {
           )
         );
 
-        setOrderPlaced(true);
-        setTimeout(() => {
-          router.push("/orders");
-        }, 2000);
+        // Redirect to order confirmation page with orderId
+        router.push(`/order-confirmation?orderId=${newOrder.id}`);
       }
     } catch (error) {
       console.error("Failed to place order:", error);
@@ -113,24 +112,6 @@ export default function CheckoutPage() {
   }
 
   if (!session?.user) return null;
-
-  if (orderPlaced) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Navbar />
-        <div className="container py-20">
-          <Card className="max-w-md mx-auto text-center p-8">
-            <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold mb-2">Order Placed Successfully!</h2>
-            <p className="text-muted-foreground mb-4">
-              Redirecting to your orders...
-            </p>
-            <Loader2 className="h-6 w-6 animate-spin mx-auto" />
-          </Card>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-background">
